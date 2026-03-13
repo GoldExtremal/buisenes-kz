@@ -1,9 +1,14 @@
 ﻿function normalizeUsername(username) {
-  return String(username || "").trim().replace(/^@/, "").toLowerCase();
+  return String(username || "")
+    .trim()
+    .replace(/^@/, "")
+    .toLowerCase();
 }
 
 function sanitizePhone(value) {
-  return String(value || "").replace(/[\s\-()]/g, "").trim();
+  return String(value || "")
+    .replace(/[\s\-()]/g, "")
+    .trim();
 }
 
 function isValidPhone(value) {
@@ -24,7 +29,7 @@ function escapeHtml(value) {
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
-    .replace(/\"/g, "&quot;")
+    .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 }
 

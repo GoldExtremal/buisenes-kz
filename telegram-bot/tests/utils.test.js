@@ -1,12 +1,7 @@
 ﻿const test = require("node:test");
 const assert = require("node:assert/strict");
 
-const {
-  normalizeUsername,
-  isValidName,
-  isValidPhone,
-  escapeHtml,
-} = require("../src/utils");
+const { normalizeUsername, isValidName, isValidPhone, escapeHtml } = require("../src/utils");
 
 test("normalizeUsername strips @ and lowercases", () => {
   assert.equal(normalizeUsername("@GoldExtremal"), "goldextremal");

@@ -1,73 +1,73 @@
 ﻿<!doctype html>
 <html lang="ru">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Business KZ Admin</title>
-  <link rel="stylesheet" href="/admin/styles.css" />
-</head>
-<body>
-  <div id="login-view" class="view">
-    <div class="card login-card">
-      <h1>Business KZ Admin</h1>
-      <p>Вход для менеджеров</p>
-      <form id="login-form">
-        <label>Логин<input id="login-username" required /></label>
-        <label>Пароль<input id="login-password" type="password" required /></label>
-        <button type="submit">Войти</button>
-      </form>
-      <p id="login-error" class="error"></p>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Business KZ Admin</title>
+    <link rel="stylesheet" href="/admin/styles.css" />
+  </head>
+  <body>
+    <div id="login-view" class="view">
+      <div class="card login-card">
+        <h1>Business KZ Admin</h1>
+        <p>Вход для менеджеров</p>
+        <form id="login-form">
+          <label>Логин<input id="login-username" required /></label>
+          <label>Пароль<input id="login-password" type="password" required /></label>
+          <button type="submit">Войти</button>
+        </form>
+        <p id="login-error" class="error"></p>
+      </div>
     </div>
-  </div>
 
-  <div id="app-view" class="view hidden">
-    <header class="topbar">
-      <div>
-        <h2>Админ-панель</h2>
-        <p id="me-line"></p>
-      </div>
-      <div class="top-actions">
-        <button id="refresh-btn">Обновить</button>
-        <button id="logout-btn" class="danger">Выйти</button>
-      </div>
-    </header>
+    <div id="app-view" class="view hidden">
+      <header class="topbar">
+        <div>
+          <h2>Админ-панель</h2>
+          <p id="me-line"></p>
+        </div>
+        <div class="top-actions">
+          <button id="refresh-btn">Обновить</button>
+          <button id="logout-btn" class="danger">Выйти</button>
+        </div>
+      </header>
 
-    <section class="stats" id="stats"></section>
+      <section class="stats" id="stats"></section>
 
-    <section class="panel">
-      <h3>Канбан заявок</h3>
-      <div class="kanban" id="kanban"></div>
-    </section>
+      <section class="panel">
+        <h3>Канбан заявок</h3>
+        <div class="kanban" id="kanban"></div>
+      </section>
 
-    <section class="panel">
-      <h3>Редактирование сайта</h3>
-      <form id="content-form" class="grid-form"></form>
-      <div class="row-actions">
-        <button id="save-content-btn" type="button">Сохранить контент</button>
-        <span id="content-status"></span>
-      </div>
-    </section>
+      <section class="panel">
+        <h3>Редактирование сайта</h3>
+        <form id="content-form" class="grid-form"></form>
+        <div class="row-actions">
+          <button id="save-content-btn" type="button">Сохранить контент</button>
+          <span id="content-status"></span>
+        </div>
+      </section>
 
-    <section class="panel hidden" id="users-panel">
-      <h3>Менеджеры и админы</h3>
-      <form id="create-user-form" class="inline-form">
-        <input id="new-username" placeholder="логин" required />
-        <input id="new-password" placeholder="пароль (мин. 8)" required />
-        <select id="new-role">
-          <option value="manager">manager</option>
-          <option value="superadmin">superadmin</option>
-        </select>
-        <button type="submit">Добавить</button>
-      </form>
-      <div id="users-table"></div>
-    </section>
+      <section class="panel hidden" id="users-panel">
+        <h3>Менеджеры и админы</h3>
+        <form id="create-user-form" class="inline-form">
+          <input id="new-username" placeholder="логин" required />
+          <input id="new-password" placeholder="пароль (мин. 8)" required />
+          <select id="new-role">
+            <option value="manager">manager</option>
+            <option value="superadmin">superadmin</option>
+          </select>
+          <button type="submit">Добавить</button>
+        </form>
+        <div id="users-table"></div>
+      </section>
 
-    <section class="panel hidden" id="activity-panel">
-      <h3>Журнал действий</h3>
-      <div id="activity-list"></div>
-    </section>
-  </div>
+      <section class="panel hidden" id="activity-panel">
+        <h3>Журнал действий</h3>
+        <div id="activity-list"></div>
+      </section>
+    </div>
 
-  <script src="/admin/app.js"></script>
-</body>
+    <script src="/admin/app.js"></script>
+  </body>
 </html>

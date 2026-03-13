@@ -1,22 +1,22 @@
 ﻿const sqlite3 = require("sqlite3").verbose();
-const crypto = require("crypto");
+const nodeCrypto = require("crypto");
 const { nowStamp } = require("./utils");
 
 function hashPassword(password) {
-  const salt = crypto.randomBytes(16).toString("hex");
-  const hash = crypto.pbkdf2Sync(password, salt, 100000, 64, "sha512").toString("hex");
+  const salt = nodeCrypto.randomBytes(16).toString("hex");
+  const hash = nodeCrypto.pbkdf2Sync(password, salt, 100000, 64, "sha512").toString("hex");
   return `${salt}:${hash}`;
 }
 
 function verifyPassword(password, stored) {
   const [salt, originalHash] = String(stored || "").split(":");
   if (!salt || !originalHash) return false;
-  const hash = crypto.pbkdf2Sync(password, salt, 100000, 64, "sha512").toString("hex");
-  return crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(originalHash));
+  const hash = nodeCrypto.pbkdf2Sync(password, salt, 100000, 64, "sha512").toString("hex");
+  return nodeCrypto.timingSafeEqual(Buffer.from(hash), Buffer.from(originalHash));
 }
 
 function randomToken() {
-  return crypto.randomBytes(32).toString("hex");
+  return nodeCrypto.randomBytes(32).toString("hex");
 }
 
 function createStore({ dbFile, adminUsername, adminPassword, sessionTtlHours, siteContentDefaults }) {
@@ -140,7 +140,11 @@ function createStore({ dbFile, adminUsername, adminPassword, sessionTtlHours, si
     for (const [key, value] of Object.entries(siteContentDefaults)) {
       const exists = await get("SELECT key FROM site_content WHERE key = ?", [key]);
       if (!exists) {
-        await run("INSERT INTO site_content(key, value, updated_at) VALUES(?, ?, ?)", [key, value, nowStamp()]);
+        await run("INSERT INTO site_content(key, value, updated_at) VALUES(?, ?, ?)", [
+          key,
+          value,
+          nowStamp(),
+        ]);
       }
     }
 
@@ -312,10 +316,12 @@ function createStore({ dbFile, adminUsername, adminPassword, sessionTtlHours, si
   }
 
   async function logAudit(actorUserId, action, details) {
-    await run(
-      "INSERT INTO audit_logs(actor_user_id, action, details, created_at) VALUES(?, ?, ?, ?)",
-      [actorUserId || null, action, details ? JSON.stringify(details) : null, nowStamp()]
-    );
+    await run("INSERT INTO audit_logs(actor_user_id, action, details, created_at) VALUES(?, ?, ?, ?)", [
+      actorUserId || null,
+      action,
+      details ? JSON.stringify(details) : null,
+      nowStamp(),
+    ]);
   }
 
   async function listActivity(limit = 300) {

@@ -120,11 +120,17 @@ function createTelegramHandlers({ bot, store, config, runtime, notifyManager }) 
       return true;
     }
     if (lowerText.includes("иин") || lowerText.includes("бин")) {
-      await reply(chatId, "Помогаем с ИИН/БИН для нерезидентов и компаний. Нажмите 'Оставить заявку' для точной оценки.");
+      await reply(
+        chatId,
+        "Помогаем с ИИН/БИН для нерезидентов и компаний. Нажмите 'Оставить заявку' для точной оценки."
+      );
       return true;
     }
     if (lowerText.includes("цена") || lowerText.includes("стоим")) {
-      await reply(chatId, "Стоимость зависит от задачи и срочности. Оставьте заявку, и менеджер даст точный расчет.");
+      await reply(
+        chatId,
+        "Стоимость зависит от задачи и срочности. Оставьте заявку, и менеджер даст точный расчет."
+      );
       return true;
     }
     return false;
@@ -147,9 +153,13 @@ function createTelegramHandlers({ bot, store, config, runtime, notifyManager }) 
     }
 
     if (lower === "связаться с менеджером") {
-      await reply(chatId, "Оставьте заявку, и менеджер свяжется с вами. Также можно позвонить: <b>+7 702 372 15 18</b>", {
-        reply_markup: MENU_KEYBOARD,
-      });
+      await reply(
+        chatId,
+        "Оставьте заявку, и менеджер свяжется с вами. Также можно позвонить: <b>+7 702 372 15 18</b>",
+        {
+          reply_markup: MENU_KEYBOARD,
+        }
+      );
       return;
     }
 
