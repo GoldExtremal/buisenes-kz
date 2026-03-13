@@ -1,5 +1,7 @@
-﻿const express = require("express");
+const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
 const { createLogger } = require("./logger");
 const { createRequestId, fail, ok } = require("./http");
 const { LEAD_STATUSES, SITE_CONTENT_DEFAULTS } = require("./constants");
@@ -8,12 +10,44 @@ const { isValidName, isValidPhone, nowStamp } = require("./utils");
 function createApiServer({ config, store, getSourceLabel, notifyManager, getManagerChatId }) {
   const app = express();
   const logger = createLogger("api");
+  const isProd = process.env.NODE_ENV === "production";
+
+  const publicLeadLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    limit: 20,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+      ok: false,
+      error: {
+        code: "rate_limit",
+        message: "Too many requests. Please try again later.",
+      },
+    },
+  });
+
+  app.use(
+    helmet({
+      contentSecurityPolicy: false,
+      crossOriginEmbedderPolicy: false,
+    })
+  );
 
   app.use(express.json({ limit: "150kb" }));
   app.use(
     cors({
       origin: config.webAllowedOrigin === "*" ? true : config.webAllowedOrigin,
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    })
+  );
+
+  app.use(
+    "/admin/api",
+    rateLimit({
+      windowMs: 60 * 1000,
+      limit: isProd ? 120 : 500,
+      standardHeaders: true,
+      legacyHeaders: false,
     })
   );
 
@@ -44,7 +78,7 @@ function createApiServer({ config, store, getSourceLabel, notifyManager, getMana
     ok(res, { content });
   });
 
-  app.post("/api/site-lead", async (req, res) => {
+  app.post("/api/site-lead", publicLeadLimiter, async (req, res) => {
     try {
       const name = String(req.body?.name || "").trim();
       const phone = String(req.body?.phone || "").trim();
@@ -58,9 +92,9 @@ function createApiServer({ config, store, getSourceLabel, notifyManager, getMana
       const payload = {
         name,
         phone,
-        service: service || "Не выбрана",
+        service: service || "�� �������",
         comment,
-        timing: "Не указан",
+        timing: "�� ������",
         source,
         channel: "site",
         username: "site-form",
@@ -68,7 +102,7 @@ function createApiServer({ config, store, getSourceLabel, notifyManager, getMana
       };
 
       const leadMeta = await store.createLead(payload);
-      await notifyManager({ payload, leadMeta, title: "Новая заявка с сайта" });
+      await notifyManager({ payload, leadMeta, title: "����� ������ � �����" });
 
       ok(res, { leadId: leadMeta.id });
     } catch (err) {
@@ -183,8 +217,10 @@ function createApiServer({ config, store, getSourceLabel, notifyManager, getMana
     const password = String(req.body?.password || "").trim();
     const role = String(req.body?.role || "manager").trim();
 
-    if (!username || password.length < 8) return fail(res, req.reqId, 400, "invalid_payload", "Invalid payload");
-    if (!["manager", "superadmin"].includes(role)) return fail(res, req.reqId, 400, "invalid_role", "Invalid role");
+    if (!username || password.length < 8)
+      return fail(res, req.reqId, 400, "invalid_payload", "Invalid payload");
+    if (!["manager", "superadmin"].includes(role))
+      return fail(res, req.reqId, 400, "invalid_role", "Invalid role");
 
     try {
       await store.createUser({ username, password, role });
@@ -206,8 +242,10 @@ function createApiServer({ config, store, getSourceLabel, notifyManager, getMana
     const isActive = typeof req.body?.is_active === "number" ? req.body.is_active : user.is_active;
     const password = String(req.body?.password || "").trim();
 
-    if (!["manager", "superadmin"].includes(role)) return fail(res, req.reqId, 400, "invalid_role", "Invalid role");
-    if (![0, 1].includes(Number(isActive))) return fail(res, req.reqId, 400, "invalid_active", "Invalid active flag");
+    if (!["manager", "superadmin"].includes(role))
+      return fail(res, req.reqId, 400, "invalid_role", "Invalid role");
+    if (![0, 1].includes(Number(isActive)))
+      return fail(res, req.reqId, 400, "invalid_active", "Invalid active flag");
 
     await store.updateUser({ id, role, isActive: Number(isActive), password });
     await store.logAudit(req.auth.user.id, "user.update", {
@@ -226,7 +264,8 @@ function createApiServer({ config, store, getSourceLabel, notifyManager, getMana
 
   app.put("/admin/api/site-content", auth(), async (req, res) => {
     const payload = req.body?.content;
-    if (!payload || typeof payload !== "object") return fail(res, req.reqId, 400, "invalid_payload", "Invalid payload");
+    if (!payload || typeof payload !== "object")
+      return fail(res, req.reqId, 400, "invalid_payload", "Invalid payload");
 
     const updates = {};
     const allowedKeys = Object.keys(SITE_CONTENT_DEFAULTS);
