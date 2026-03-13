@@ -1,0 +1,16 @@
+﻿# Root ignores
+.vscode/
+
+# OS / logs
+*.log
+.DS_Store
+Thumbs.db
+
+# Local runtime artifacts
+telegram-bot/node_modules/
+telegram-bot/.venv/
+telegram-bot/__pycache__/
+telegram-bot/*.pyc
+telegram-bot/bot.db
+telegram-bot/.env
+telegram-bot/.env.local
