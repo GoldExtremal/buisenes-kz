@@ -1,4 +1,4 @@
-﻿-- 001_init.sql
+-- 001_init.sql
 CREATE TABLE IF NOT EXISTS leads (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL,

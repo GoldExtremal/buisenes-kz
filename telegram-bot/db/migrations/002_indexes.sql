@@ -1,4 +1,4 @@
-﻿-- 002_indexes.sql
+-- 002_indexes.sql
 CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status);
 CREATE INDEX IF NOT EXISTS idx_leads_assignee ON leads(assignee_user_id);
 CREATE INDEX IF NOT EXISTS idx_leads_created_at ON leads(created_at);

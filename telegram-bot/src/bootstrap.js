@@ -1,4 +1,4 @@
-﻿const TelegramBot = require("node-telegram-bot-api");
+const TelegramBot = require("node-telegram-bot-api");
 const { config } = require("./config");
 const { LEAD_STATUSES, SITE_CONTENT_DEFAULTS } = require("./constants");
 const { createStore } = require("./store");

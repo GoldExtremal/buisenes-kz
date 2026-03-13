@@ -1,4 +1,4 @@
-﻿const API = "/admin/api";
+const API = "/admin/api";
 const TOKEN_KEY = "bkz_admin_token";
 const STATUSES = ["new", "in_progress", "waiting", "done"];
 const STATUS_LABELS = {

@@ -1,4 +1,4 @@
-﻿function createLogger(scope = "app") {
+function createLogger(scope = "app") {
   function write(level, message, meta = {}) {
     const line = {
       ts: new Date().toISOString(),

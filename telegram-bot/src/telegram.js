@@ -1,4 +1,4 @@
-﻿const {
+const {
   MENU_KEYBOARD,
   CANCEL_KEYBOARD,
   SERVICES_KEYBOARD,

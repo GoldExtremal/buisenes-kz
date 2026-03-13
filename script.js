@@ -1,4 +1,4 @@
-﻿const menuBtn = document.querySelector('.menu-toggle');
+const menuBtn = document.querySelector('.menu-toggle');
 const nav = document.querySelector('.site-nav');
 const form = document.getElementById('quick-form');
 const formNote = document.getElementById('form-note');
