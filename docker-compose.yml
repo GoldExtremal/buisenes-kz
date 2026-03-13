@@ -1,0 +1,13 @@
+services:
+  business-kz-bot:
+    build:
+      context: ./telegram-bot
+    container_name: business-kz-bot
+    restart: unless-stopped
+    env_file:
+      - ./telegram-bot/.env
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./telegram-bot:/app
+      - /app/node_modules
