@@ -1,18 +1,13 @@
 ﻿const express = require("express");
 const cors = require("cors");
-const {
-  LEAD_STATUSES,
-  SITE_CONTENT_DEFAULTS,
-} = require("./constants");
-const {
-  isValidName,
-  isValidPhone,
-  escapeHtml,
-  nowStamp,
-} = require("./utils");
+const { createLogger } = require("./logger");
+const { createRequestId, fail, ok } = require("./http");
+const { LEAD_STATUSES, SITE_CONTENT_DEFAULTS } = require("./constants");
+const { isValidName, isValidPhone, nowStamp } = require("./utils");
 
 function createApiServer({ config, store, getSourceLabel, notifyManager, getManagerChatId }) {
   const app = express();
+  const logger = createLogger("api");
 
   app.use(express.json({ limit: "150kb" }));
   app.use(
@@ -22,14 +17,31 @@ function createApiServer({ config, store, getSourceLabel, notifyManager, getMana
     })
   );
 
+  app.use((req, res, next) => {
+    req.reqId = createRequestId();
+    const startedAt = Date.now();
+
+    res.on("finish", () => {
+      logger.info("request.completed", {
+        reqId: req.reqId,
+        method: req.method,
+        path: req.path,
+        status: res.statusCode,
+        ms: Date.now() - startedAt,
+      });
+    });
+
+    next();
+  });
+
   app.get("/health", (_req, res) => {
-    res.json({ ok: true, service: "business-kz-admin-api" });
+    ok(res, { service: "business-kz-admin-api" });
   });
 
   app.get("/api/public/site-content", async (_req, res) => {
     const rows = await store.listSiteContentPublic();
     const content = Object.fromEntries(rows.map((r) => [r.key, r.value]));
-    res.json({ ok: true, content });
+    ok(res, { content });
   });
 
   app.post("/api/site-lead", async (req, res) => {
@@ -40,8 +52,8 @@ function createApiServer({ config, store, getSourceLabel, notifyManager, getMana
       const comment = String(req.body?.comment || "").trim();
       const source = getSourceLabel(String(req.body?.source || "site_quick_form").trim());
 
-      if (!isValidName(name)) return res.status(400).json({ ok: false, error: "invalid_name" });
-      if (!isValidPhone(phone)) return res.status(400).json({ ok: false, error: "invalid_phone" });
+      if (!isValidName(name)) return fail(res, req.reqId, 400, "invalid_name", "Invalid name");
+      if (!isValidPhone(phone)) return fail(res, req.reqId, 400, "invalid_phone", "Invalid phone");
 
       const payload = {
         name,
@@ -58,10 +70,10 @@ function createApiServer({ config, store, getSourceLabel, notifyManager, getMana
       const leadMeta = await store.createLead(payload);
       await notifyManager({ payload, leadMeta, title: "Новая заявка с сайта" });
 
-      res.json({ ok: true, leadId: leadMeta.id });
+      ok(res, { leadId: leadMeta.id });
     } catch (err) {
-      console.error("Site lead API error:", err.message);
-      res.status(500).json({ ok: false, error: "internal_error" });
+      logger.error("site_lead.failed", { reqId: req.reqId, error: err.message });
+      fail(res, req.reqId, 500, "internal_error", "Internal error");
     }
   });
 
@@ -70,13 +82,13 @@ function createApiServer({ config, store, getSourceLabel, notifyManager, getMana
       const authHeader = req.headers.authorization || "";
       const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
       if (!token) {
-        if (required) return res.status(401).json({ ok: false, error: "unauthorized" });
+        if (required) return fail(res, req.reqId, 401, "unauthorized", "Unauthorized");
         return next();
       }
 
       const row = await store.getSessionWithUser(token);
       if (!row || !row.is_active || row.expires_at < nowStamp()) {
-        if (required) return res.status(401).json({ ok: false, error: "unauthorized" });
+        if (required) return fail(res, req.reqId, 401, "unauthorized", "Unauthorized");
         return next();
       }
 
@@ -91,7 +103,7 @@ function createApiServer({ config, store, getSourceLabel, notifyManager, getMana
   function requireRole(...roles) {
     return (req, res, next) => {
       const role = req.auth?.user?.role;
-      if (!role || !roles.includes(role)) return res.status(403).json({ ok: false, error: "forbidden" });
+      if (!role || !roles.includes(role)) return fail(res, req.reqId, 403, "forbidden", "Forbidden");
       return next();
     };
   }
@@ -102,13 +114,12 @@ function createApiServer({ config, store, getSourceLabel, notifyManager, getMana
 
     const user = await store.getUserByUsername(username);
     if (!user || !user.is_active || !store.verifyPassword(password, user.password_hash)) {
-      return res.status(401).json({ ok: false, error: "invalid_credentials" });
+      return fail(res, req.reqId, 401, "invalid_credentials", "Invalid credentials");
     }
 
     const token = await store.createSession(user.id);
     await store.logAudit(user.id, "auth.login", { username });
-    return res.json({
-      ok: true,
+    return ok(res, {
       token,
       user: { id: user.id, username: user.username, role: user.role },
     });
@@ -117,24 +128,24 @@ function createApiServer({ config, store, getSourceLabel, notifyManager, getMana
   app.post("/admin/api/auth/logout", auth(), async (req, res) => {
     await store.deleteSession(req.auth.token);
     await store.logAudit(req.auth.user.id, "auth.logout", {});
-    res.json({ ok: true });
+    ok(res);
   });
 
   app.get("/admin/api/me", auth(), async (req, res) => {
-    res.json({ ok: true, user: req.auth.user });
+    ok(res, { user: req.auth.user });
   });
 
   app.get("/admin/api/leads", auth(), async (_req, res) => {
     const leads = await store.listLeads(500);
-    res.json({ ok: true, leads, statuses: LEAD_STATUSES });
+    ok(res, { leads, statuses: LEAD_STATUSES });
   });
 
   app.patch("/admin/api/leads/:id", auth(), async (req, res) => {
     const id = Number(req.params.id);
-    if (!Number.isFinite(id)) return res.status(400).json({ ok: false, error: "invalid_id" });
+    if (!Number.isFinite(id)) return fail(res, req.reqId, 400, "invalid_id", "Invalid id");
 
     const current = await store.getLeadById(id);
-    if (!current) return res.status(404).json({ ok: false, error: "not_found" });
+    if (!current) return fail(res, req.reqId, 404, "not_found", "Lead not found");
 
     const status = LEAD_STATUSES.includes(String(req.body?.status || current.status || "new"))
       ? String(req.body?.status || current.status || "new")
@@ -154,17 +165,17 @@ function createApiServer({ config, store, getSourceLabel, notifyManager, getMana
           : Number(req.body?.assignee_user_id || current.assignee_user_id || null),
     };
 
-    if (!isValidName(next.name)) return res.status(400).json({ ok: false, error: "invalid_name" });
-    if (!isValidPhone(next.phone)) return res.status(400).json({ ok: false, error: "invalid_phone" });
+    if (!isValidName(next.name)) return fail(res, req.reqId, 400, "invalid_name", "Invalid name");
+    if (!isValidPhone(next.phone)) return fail(res, req.reqId, 400, "invalid_phone", "Invalid phone");
 
     await store.updateLead(id, next);
     await store.logAudit(req.auth.user.id, "lead.update", { id, updates: next });
-    res.json({ ok: true });
+    ok(res);
   });
 
   app.get("/admin/api/users", auth(), requireRole("superadmin"), async (_req, res) => {
     const users = await store.listUsers();
-    res.json({ ok: true, users });
+    ok(res, { users });
   });
 
   app.post("/admin/api/users", auth(), requireRole("superadmin"), async (req, res) => {
@@ -172,31 +183,31 @@ function createApiServer({ config, store, getSourceLabel, notifyManager, getMana
     const password = String(req.body?.password || "").trim();
     const role = String(req.body?.role || "manager").trim();
 
-    if (!username || password.length < 8) return res.status(400).json({ ok: false, error: "invalid_payload" });
-    if (!["manager", "superadmin"].includes(role)) return res.status(400).json({ ok: false, error: "invalid_role" });
+    if (!username || password.length < 8) return fail(res, req.reqId, 400, "invalid_payload", "Invalid payload");
+    if (!["manager", "superadmin"].includes(role)) return fail(res, req.reqId, 400, "invalid_role", "Invalid role");
 
     try {
       await store.createUser({ username, password, role });
       await store.logAudit(req.auth.user.id, "user.create", { username, role });
-      res.json({ ok: true });
+      ok(res);
     } catch (_err) {
-      res.status(400).json({ ok: false, error: "username_exists" });
+      fail(res, req.reqId, 400, "username_exists", "Username already exists");
     }
   });
 
   app.patch("/admin/api/users/:id", auth(), requireRole("superadmin"), async (req, res) => {
     const id = Number(req.params.id);
-    if (!Number.isFinite(id)) return res.status(400).json({ ok: false, error: "invalid_id" });
+    if (!Number.isFinite(id)) return fail(res, req.reqId, 400, "invalid_id", "Invalid id");
 
     const user = await store.getUserById(id);
-    if (!user) return res.status(404).json({ ok: false, error: "not_found" });
+    if (!user) return fail(res, req.reqId, 404, "not_found", "User not found");
 
     const role = req.body?.role ? String(req.body.role) : user.role;
     const isActive = typeof req.body?.is_active === "number" ? req.body.is_active : user.is_active;
     const password = String(req.body?.password || "").trim();
 
-    if (!["manager", "superadmin"].includes(role)) return res.status(400).json({ ok: false, error: "invalid_role" });
-    if (![0, 1].includes(Number(isActive))) return res.status(400).json({ ok: false, error: "invalid_active" });
+    if (!["manager", "superadmin"].includes(role)) return fail(res, req.reqId, 400, "invalid_role", "Invalid role");
+    if (![0, 1].includes(Number(isActive))) return fail(res, req.reqId, 400, "invalid_active", "Invalid active flag");
 
     await store.updateUser({ id, role, isActive: Number(isActive), password });
     await store.logAudit(req.auth.user.id, "user.update", {
@@ -205,17 +216,17 @@ function createApiServer({ config, store, getSourceLabel, notifyManager, getMana
       is_active: Number(isActive),
       password_changed: !!password,
     });
-    res.json({ ok: true });
+    ok(res);
   });
 
   app.get("/admin/api/site-content", auth(), async (_req, res) => {
     const content = await store.listSiteContent();
-    res.json({ ok: true, content });
+    ok(res, { content });
   });
 
   app.put("/admin/api/site-content", auth(), async (req, res) => {
     const payload = req.body?.content;
-    if (!payload || typeof payload !== "object") return res.status(400).json({ ok: false, error: "invalid_payload" });
+    if (!payload || typeof payload !== "object") return fail(res, req.reqId, 400, "invalid_payload", "Invalid payload");
 
     const updates = {};
     const allowedKeys = Object.keys(SITE_CONTENT_DEFAULTS);
@@ -227,12 +238,12 @@ function createApiServer({ config, store, getSourceLabel, notifyManager, getMana
 
     await store.upsertSiteContent(updates);
     await store.logAudit(req.auth.user.id, "site_content.update", updates);
-    res.json({ ok: true });
+    ok(res);
   });
 
   app.get("/admin/api/activity", auth(), requireRole("superadmin"), async (_req, res) => {
     const logs = await store.listActivity(300);
-    res.json({ ok: true, logs });
+    ok(res, { logs });
   });
 
   app.get("/admin/api/stats", auth(), async (_req, res) => {
@@ -242,13 +253,24 @@ function createApiServer({ config, store, getSourceLabel, notifyManager, getMana
       byStatus[row.status || "new"] = row.total;
     });
     const total = Object.values(byStatus).reduce((a, b) => a + Number(b), 0);
-    res.json({ ok: true, total, byStatus, managerChatBound: !!getManagerChatId() });
+    ok(res, { total, byStatus, managerChatBound: !!getManagerChatId() });
   });
 
   app.use("/admin", express.static(config.adminDir));
 
+  app.use((err, req, res, _next) => {
+    logger.error("request.failed", {
+      reqId: req?.reqId,
+      method: req?.method,
+      path: req?.path,
+      error: err?.message || "unknown_error",
+    });
+    if (res.headersSent) return;
+    fail(res, req?.reqId || "n/a", 500, "internal_error", "Internal error");
+  });
+
   app.listen(config.port, () => {
-    console.log(`HTTP API started on port ${config.port}`);
+    logger.info("server.started", { port: config.port });
   });
 }
 

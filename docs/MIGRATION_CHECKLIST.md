@@ -10,10 +10,10 @@ Prepare codebase for React/structured migration without breaking current product
 - [x] Keep admin panel and API behind clear route prefixes
 
 ## Pending (safe incremental)
-- [ ] Split `telegram-bot/bot.js` into domain modules
+- [x] Split `telegram-bot/bot.js` into domain modules
 - [ ] Add API contract docs per endpoint
-- [ ] Add lightweight tests for lead creation and auth
-- [ ] Add structured error response shape
+- [x] Add lightweight tests for lead creation and auth
+- [x] Add structured error response shape
 - [ ] Add DB migration scripts folder
 
 ## Commit Strategy

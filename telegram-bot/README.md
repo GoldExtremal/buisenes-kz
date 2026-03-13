@@ -23,6 +23,11 @@ npm install
 npm run start
 ```
 
+## Тесты
+```bash
+npm test
+```
+
 После запуска доступны:
 - API health: `http://localhost:3001/health`
 - Публичный контент сайта: `http://localhost:3001/api/public/site-content`
@@ -42,3 +47,16 @@ npm run start
 - `ADMIN_USERNAME` - логин первого супер-админа
 - `ADMIN_PASSWORD` - пароль первого супер-админа
 - `SESSION_TTL_HOURS` - TTL сессии в часах
+
+## Формат ошибок API
+Сервер возвращает ошибки в унифицированном виде:
+```json
+{
+  "ok": false,
+  "error": {
+    "code": "invalid_payload",
+    "message": "Invalid payload",
+    "requestId": "..."
+  }
+}
+```
