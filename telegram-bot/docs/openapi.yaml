@@ -1,0 +1,186 @@
+﻿openapi: 3.0.3
+info:
+  title: Business KZ API
+  version: 1.0.0
+  description: API for public site leads, admin panel, and content management.
+servers:
+  - url: http://localhost:3001
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: OK
+  /api/public/site-content:
+    get:
+      summary: Get public site content
+      responses:
+        "200":
+          description: Public content map
+  /api/site-lead:
+    post:
+      summary: Create lead from public site form
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, phone]
+              properties:
+                name: { type: string }
+                phone: { type: string }
+                service: { type: string }
+                comment: { type: string }
+                source: { type: string }
+      responses:
+        "200":
+          description: Lead created
+        "400":
+          description: Validation error
+  /admin/api/auth/login:
+    post:
+      summary: Admin login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username: { type: string }
+                password: { type: string }
+      responses:
+        "200":
+          description: Auth token
+        "401":
+          description: Invalid credentials
+  /admin/api/auth/logout:
+    post:
+      summary: Admin logout
+      security:
+        - bearerAuth: []
+      responses:
+        "200": { description: OK }
+  /admin/api/me:
+    get:
+      summary: Get current admin user
+      security:
+        - bearerAuth: []
+      responses:
+        "200": { description: Current user }
+  /admin/api/leads:
+    get:
+      summary: List leads
+      security:
+        - bearerAuth: []
+      responses:
+        "200": { description: Leads list }
+  /admin/api/leads/{id}:
+    patch:
+      summary: Update lead
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200": { description: Updated }
+        "400": { description: Validation error }
+        "404": { description: Not found }
+  /admin/api/users:
+    get:
+      summary: List users (superadmin)
+      security:
+        - bearerAuth: []
+      responses:
+        "200": { description: Users list }
+    post:
+      summary: Create user (superadmin)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password, role]
+              properties:
+                username: { type: string }
+                password: { type: string }
+                role:
+                  type: string
+                  enum: [manager, superadmin]
+      responses:
+        "200": { description: Created }
+  /admin/api/users/{id}:
+    patch:
+      summary: Update user (superadmin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200": { description: Updated }
+  /admin/api/site-content:
+    get:
+      summary: Get editable site content
+      security:
+        - bearerAuth: []
+      responses:
+        "200": { description: Content rows }
+    put:
+      summary: Update site content
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: object
+      responses:
+        "200": { description: Updated }
+  /admin/api/activity:
+    get:
+      summary: Audit logs (superadmin)
+      security:
+        - bearerAuth: []
+      responses:
+        "200": { description: Activity list }
+  /admin/api/stats:
+    get:
+      summary: Lead status counters
+      security:
+        - bearerAuth: []
+      responses:
+        "200": { description: Stats }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
