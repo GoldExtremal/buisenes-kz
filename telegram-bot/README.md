@@ -5,12 +5,16 @@
 - HTTP API для заявок с сайта
 - Админку для менеджеров (`/admin`) с канбан-доской
 
-## Возможности админки
-- Канбан по заявкам: `new`, `in_progress`, `waiting`, `done`
-- Редактирование данных заявки (имя, телефон, услуга, комментарий, срок, ответственный)
-- Редактирование контента сайта (hero, контакты, WhatsApp)
-- Управление пользователями и ролями (`manager`, `superadmin`)
-- Аудит действий (для `superadmin`)
+## Структура (этап 2)
+- `bot.js` — тонкая точка входа
+- `src/config.js` — конфиг окружения
+- `src/constants.js` — доменные константы
+- `src/utils.js` — общие утилиты
+- `src/store.js` — SQLite store + auth/session/audit/content
+- `src/telegram.js` — сценарии Telegram-бота
+- `src/api.js` — HTTP API и admin routes
+- `src/bootstrap.js` — сборка приложения
+- `admin/` — frontend админки
 
 ## Запуск
 ```bash
@@ -29,17 +33,6 @@ npm run start
 - `ADMIN_USERNAME`
 - `ADMIN_PASSWORD`
 
-После входа рекомендуется сменить пароль через раздел пользователей.
-
-## Важные API
-- `POST /api/site-lead` — заявка с сайта
-- `POST /admin/api/auth/login` — вход
-- `GET /admin/api/leads` — список заявок
-- `PATCH /admin/api/leads/:id` — обновление заявки
-- `GET/POST/PATCH /admin/api/users` — управление пользователями
-- `GET/PUT /admin/api/site-content` — контент сайта
-- `GET /admin/api/activity` — журнал действий
-
 ## .env
 - `TOKEN` - Telegram bot token
 - `DB_PATH` - SQLite файл
@@ -48,9 +41,4 @@ npm run start
 - `WEB_ALLOWED_ORIGIN` - CORS origin
 - `ADMIN_USERNAME` - логин первого супер-админа
 - `ADMIN_PASSWORD` - пароль первого супер-админа
-
-## Как включить Telegram-уведомления менеджеру
-1. Запустите сервис
-2. Напишите боту своим аккаунтом (`MANAGER_USERNAME`)
-3. Выполните `/bind_manager`
-4. Новые заявки с сайта и бота будут приходить в Telegram менеджеру
+- `SESSION_TTL_HOURS` - TTL сессии в часах
