@@ -484,6 +484,24 @@ section {
   color: var(--muted);
 }
 
+.tg-float {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 30;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid #3d78ff;
+  background: #2f6fff;
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 10px 20px rgba(47, 111, 255, 0.28);
+}
+
+.tg-float:hover {
+  background: #295fe0;
+}
+
 .reveal {
   opacity: 0;
   transform: translateY(16px);
@@ -544,5 +562,12 @@ section {
     opacity: 1;
     pointer-events: auto;
     transform: translateY(0);
+  }
+
+  .tg-float {
+    right: 12px;
+    bottom: 12px;
+    padding: 11px 12px;
+    font-size: 0.92rem;
   }
 }
