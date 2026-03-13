@@ -1,38 +1,38 @@
 # Business KZ Bot Service
 
-Telegram-��� + API + ������� ��� ��������� ������ Business KZ.
+Telegram-бот + API + админка для обработки заявок Business KZ.
 
-## ��� ������
+## Что внутри
 
-- Telegram-��� � ��������� ������ ������
-- API ��� ������ � �����
-- ������� (`/admin`) ��� ����������
-- SQLite ���������
-- ������� ����� � DevOps-�������
+- Telegram-бот с пошаговым сбором заявки
+- API для заявок с сайта
+- Админка (`/admin`) для менеджеров
+- SQLite хранилище
+- Базовые тесты и DevOps-скрипты
 
-## ���������
+## Структура
 
 - `bot.js` - entrypoint
-- `src/` - backend ������
-- `admin/` - frontend �������
-- `db/migrations/` - SQL ��������
-- `docs/openapi.yaml` - �������� API
-- `scripts/apply-migrations.js` - ��������
+- `src/` - backend модули
+- `admin/` - frontend админки
+- `db/migrations/` - SQL миграции
+- `docs/openapi.yaml` - контракт API
+- `scripts/apply-migrations.js` - миграции
 - `scripts/backup-db.js` - backup
 - `tests/` - unit tests
 
-## ������� ������ (Git Bash)
+## Быстрый запуск (Git Bash)
 
 ```bash
 cd /c/Users/GoldExtremal/.vscode/projects/buisenes-kz/telegram-bot
 npm install
 cp .env.example .env
-# ����� TOKEN, MANAGER_USERNAME, ADMIN_PASSWORD
+# укажи TOKEN, MANAGER_USERNAME, ADMIN_PASSWORD
 npm run db:migrate
 npm run start
 ```
 
-## �������
+## Команды
 
 ```bash
 npm run start
@@ -45,40 +45,40 @@ npm run db:migrate
 npm run db:backup
 ```
 
-## �������
+## Админка
 
-����� �������:
+После запуска:
 
 - `http://localhost:3001/admin`
 
-��������� �����-����� ��������� �� `.env`:
+Первичный супер-админ создается из `.env`:
 
 - `ADMIN_USERNAME`
 - `ADMIN_PASSWORD`
 
-## �������� ��������� � Telegram
+## Привязка менеджера в Telegram
 
-1. � `.env` ����� `MANAGER_USERNAME` ��� `@`
-2. ���� ��������� ������� ���� `/bind_manager`
-3. ����� ����� ������ �� �����/���� ����� ��������� � ����������� ���
+1. В `.env` укажи `MANAGER_USERNAME` без `@`
+2. Этим аккаунтом отправь боту `/bind_manager`
+3. После этого заявки из сайта/бота будут приходить в привязанный чат
 
-## ���������� ���������
+## Переменные окружения
 
-- `TOKEN` - ����� Telegram-����
-- `DB_PATH` - ���� � SQLite (������ `bot.db`)
-- `MANAGER_USERNAME` - username ��������� ��� `/bind_manager`
-- `PORT` - ���� API (�� ��������� `3001`)
+- `TOKEN` - токен Telegram-бота
+- `DB_PATH` - путь к SQLite (обычно `bot.db`)
+- `MANAGER_USERNAME` - username менеджера для `/bind_manager`
+- `PORT` - порт API (по умолчанию `3001`)
 - `WEB_ALLOWED_ORIGIN` - CORS origin
-- `ADMIN_USERNAME` - ����� �����-������
-- `ADMIN_PASSWORD` - ������ �����-������
-- `SESSION_TTL_HOURS` - TTL ������
+- `ADMIN_USERNAME` - логин супер-админа
+- `ADMIN_PASSWORD` - пароль супер-админа
+- `SESSION_TTL_HOURS` - TTL сессии
 
-## ������������
+## Безопасность
 
-- `helmet` ��� HTTP headers
-- rate limit �� ��������� � admin API
-- role-based ������ (`manager`, `superadmin`)
-- ������ ������ ������ API
+- `helmet` для HTTP headers
+- rate limit на публичный и admin API
+- role-based доступ (`manager`, `superadmin`)
+- единый формат ошибок API
 
 ## Docker
 
@@ -87,9 +87,9 @@ cd /c/Users/GoldExtremal/.vscode/projects/buisenes-kz
 docker compose up --build
 ```
 
-## ������������ � ��������
+## Тестирование и качество
 
-CI workflow (`.github/workflows/ci.yml`) ���������:
+CI workflow (`.github/workflows/ci.yml`) проверяет:
 
 - `npm run lint`
 - `npm test`

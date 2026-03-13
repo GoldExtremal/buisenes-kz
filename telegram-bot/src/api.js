@@ -92,9 +92,9 @@ function createApiServer({ config, store, getSourceLabel, notifyManager, getMana
       const payload = {
         name,
         phone,
-        service: service || "�� �������",
+        service: service || "Не выбрана",
         comment,
-        timing: "�� ������",
+        timing: "Не указан",
         source,
         channel: "site",
         username: "site-form",
@@ -102,7 +102,7 @@ function createApiServer({ config, store, getSourceLabel, notifyManager, getMana
       };
 
       const leadMeta = await store.createLead(payload);
-      await notifyManager({ payload, leadMeta, title: "����� ������ � �����" });
+      await notifyManager({ payload, leadMeta, title: "Новая заявка с сайта" });
 
       ok(res, { leadId: leadMeta.id });
     } catch (err) {
