@@ -1,5 +1,6 @@
-﻿# Root ignores
+# Root ignores
 .vscode/
+demo/
 
 # OS / logs
 *.log
