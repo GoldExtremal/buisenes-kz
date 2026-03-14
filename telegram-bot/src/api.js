@@ -7,6 +7,7 @@ const { createLogger } = require("./logger");
 const { createRequestId, fail, ok } = require("./http");
 const { LEAD_STATUSES, SITE_CONTENT_DEFAULTS } = require("./constants");
 const { isValidName, isValidPhone, nowStamp } = require("./utils");
+const { get2gisReviews, REVIEWS_URL } = require("./reviews2gis");
 
 function createApiServer({ config, store, getSourceLabel, notifyManager, getManagerChatId }) {
   const app = express();
@@ -99,6 +100,22 @@ function createApiServer({ config, store, getSourceLabel, notifyManager, getMana
     const rows = await store.listSiteContentPublic();
     const content = Object.fromEntries(rows.map((r) => [r.key, r.value]));
     ok(res, { content });
+  });
+
+  app.get("/api/public/reviews/2gis", async (req, res) => {
+    try {
+      const force = String(req.query?.force || "").trim() === "1";
+      const payload = await get2gisReviews({ force });
+      ok(res, payload);
+    } catch (err) {
+      logger.warn("reviews_2gis.failed", { reqId: req.reqId, error: err.message });
+      ok(res, {
+        sourceUrl: REVIEWS_URL,
+        updatedAt: null,
+        total: 0,
+        reviews: [],
+      });
+    }
   });
 
   app.post("/api/site-lead", publicLeadLimiter, async (req, res) => {

@@ -64,14 +64,16 @@ async function bootstrap() {
   });
 
   telegramHandlers.register();
-  await bot.launch();
-
   createApiServer({
     config,
     store,
     getSourceLabel: telegramHandlers.getSourceLabel,
     notifyManager,
     getManagerChatId: () => runtime.managerChatId,
+  });
+
+  bot.launch().catch((err) => {
+    console.error("Telegram launch failed, API remains available:", err.message);
   });
 
   console.log(`Bot started (JS). DB: ${config.dbFile}`);
