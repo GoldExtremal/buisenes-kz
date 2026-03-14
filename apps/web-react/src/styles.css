@@ -1545,6 +1545,40 @@ section {
 }
 
 @media (max-width: 980px) {
+  body {
+    background: radial-gradient(circle at 82% -6%, rgba(49, 108, 255, 0.1) 0, rgba(49, 108, 255, 0) 42%), var(--bg);
+  }
+
+  .bg-shape {
+    opacity: 0.08;
+    filter: blur(70px);
+  }
+
+  .bg-shape-1 {
+    width: 250px;
+    height: 250px;
+    top: -100px;
+    right: -95px;
+  }
+
+  .bg-shape-2 {
+    display: none;
+  }
+
+  .header-inner {
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .brand-text {
+    display: none;
+  }
+
+  .brand-logo {
+    width: 42px;
+    height: 42px;
+  }
+
   .hero-grid,
   .cards,
   .visa-children,
@@ -1579,6 +1613,12 @@ section {
     flex: 1 1 190px;
   }
 
+  .hero-card {
+    background: linear-gradient(180deg, rgba(14, 24, 38, 0.9) 0%, rgba(11, 20, 31, 0.88) 100%);
+    border-color: rgba(86, 114, 152, 0.5);
+    box-shadow: 0 12px 24px rgba(6, 16, 30, 0.3);
+  }
+
   .reviews-actions {
     width: 100%;
     justify-content: flex-start;
@@ -1591,7 +1631,16 @@ section {
   }
 
   .metrics {
-    grid-template-columns: 1fr;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .metrics li {
+    border-right: 0;
+    margin-right: 0;
+    padding-right: 0;
+    min-width: 0;
   }
 
   .contacts-links {
@@ -1615,23 +1664,53 @@ section {
     width: 100%;
   }
 
-  .hours-days-grid,
-  .hours-values-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .contacts-address {
+    white-space: normal;
   }
 
-  .hours-value.is-open,
+  .hours-days-grid,
+  .hours-values-grid {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .hours-days-grid span {
+    min-height: 36px;
+    padding: 6px 3px;
+    font-size: 0.84rem;
+  }
+
+  .hours-value {
+    min-height: 54px;
+    padding: 8px 4px;
+    font-size: 1.35rem;
+  }
+
+  .hours-value.is-open {
+    grid-column: 1 / span 5;
+  }
+
   .hours-value.is-closed {
-    grid-column: auto;
+    grid-column: 6 / span 2;
+    font-size: 1.12rem;
   }
 
   .theme-toggle {
-    margin-left: 0;
-    margin-right: 2px;
+    order: 2;
+    margin-left: auto;
+    margin-right: 0;
   }
 
   .menu-toggle {
+    order: 3;
     display: inline-block;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .site-nav {
+    order: 4;
+    margin-left: 0;
   }
 
   .site-nav {
@@ -1657,6 +1736,16 @@ section {
     opacity: 1;
     pointer-events: auto;
     transform: translateY(0);
+  }
+
+  [data-theme="light"] body {
+    background: radial-gradient(circle at 82% -6%, rgba(62, 118, 255, 0.08) 0, rgba(62, 118, 255, 0) 42%), var(--bg);
+  }
+
+  [data-theme="light"] .hero-card {
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    border-color: rgba(177, 197, 228, 0.75);
+    box-shadow: 0 10px 22px rgba(73, 105, 154, 0.14);
   }
 
   .floating-actions {
