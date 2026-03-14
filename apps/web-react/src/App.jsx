@@ -13,6 +13,7 @@ const YANDEX_MAP_LINK = "https://yandex.ru/maps/?ll=71.439996%2C51.164985&z=16&p
 const YANDEX_MAP_EMBED_URL =
   "https://yandex.ru/map-widget/v1/?ll=71.439996%2C51.164985&z=16&pt=71.439996,51.164985,pm2rdm";
 const REVIEWS_LIMIT = 7;
+const THEME_STORAGE_KEY = "bkz-theme";
 
 const SITE_CONTENT_DEFAULTS = {
   hero_title: "Запуск бизнеса, миграция и визовое сопровождение без бюрократического стресса",
@@ -103,6 +104,13 @@ function normalizePhoneForSubmit(value) {
 }
 
 function App() {
+  const [theme, setTheme] = useState(() => {
+    if (typeof window === "undefined") return "dark";
+    const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+    if (savedTheme === "light" || savedTheme === "dark") return savedTheme;
+    const prefersLight = window.matchMedia?.("(prefers-color-scheme: light)").matches;
+    return prefersLight ? "light" : "dark";
+  });
   const [menuOpen, setMenuOpen] = useState(false);
   const [formData, setFormData] = useState({ name: "", phone: "", service: "" });
   const [formState, setFormState] = useState({ loading: false, note: "" });
@@ -115,6 +123,11 @@ function App() {
   const headerRef = useRef(null);
 
   const mergedContent = useMemo(() => ({ ...SITE_CONTENT_DEFAULTS, ...content }), [content]);
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+  }, [theme]);
 
   useEffect(() => {
     const revealItems = document.querySelectorAll(".reveal:not(.visible)");
@@ -363,6 +376,30 @@ function App() {
               Позвонить
             </a>
           </nav>
+
+          <button
+            className="theme-toggle"
+            type="button"
+            onClick={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
+            aria-label={theme === "dark" ? "Включить светлую тему" : "Включить тёмную тему"}
+            title={theme === "dark" ? "Светлая тема" : "Тёмная тема"}
+          >
+            {theme === "dark" ? (
+              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                <path
+                  fill="currentColor"
+                  d="M12 4a1 1 0 0 1 1 1v1.5a1 1 0 0 1-2 0V5a1 1 0 0 1 1-1Zm0 13.5a1 1 0 0 1 1 1V20a1 1 0 0 1-2 0v-1.5a1 1 0 0 1 1-1Zm8-5.5a1 1 0 0 1-1 1h-1.5a1 1 0 0 1 0-2H19a1 1 0 0 1 1 1ZM7.5 12a1 1 0 0 1-1 1H5a1 1 0 0 1 0-2h1.5a1 1 0 0 1 1 1Zm8.1-5.1a1 1 0 0 1 1.4 0l1.06 1.06a1 1 0 0 1-1.42 1.42L15.6 8.31a1 1 0 0 1 0-1.42ZM6.94 15.56a1 1 0 0 1 1.42 0l1.05 1.05a1 1 0 1 1-1.41 1.42l-1.06-1.06a1 1 0 0 1 0-1.41ZM17.06 15.56a1 1 0 0 1 0 1.41L16 18.03a1 1 0 1 1-1.41-1.42l1.05-1.05a1 1 0 0 1 1.42 0ZM8.36 6.9a1 1 0 0 1 0 1.41L7.31 9.37A1 1 0 0 1 5.9 7.95l1.05-1.06a1 1 0 0 1 1.41 0ZM12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z"
+                />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                <path
+                  fill="currentColor"
+                  d="M21 13.03A9 9 0 1 1 10.97 3a1 1 0 0 1 1.1 1.28 7 7 0 0 0 7.65 9.75A1 1 0 0 1 21 13.03Z"
+                />
+              </svg>
+            )}
+          </button>
         </div>
       </header>
 
