@@ -32,6 +32,8 @@ npm run db:migrate
 npm run start
 ```
 
+`npm run start` теперь автоматически применяет SQL-миграции при запуске.
+
 ## Команды
 
 ```bash
@@ -90,6 +92,12 @@ cd /c/Users/GoldExtremal/.vscode/projects/buisenes-kz
 docker compose up --build
 ```
 
+Dev-режим с bind mounts:
+
+```bash
+docker compose -f docker-compose.dev.yml up --build
+```
+
 ## Тестирование и качество
 
 CI workflow (`.github/workflows/ci.yml`) проверяет:
@@ -97,3 +105,4 @@ CI workflow (`.github/workflows/ci.yml`) проверяет:
 - `npm run lint`
 - `npm test`
 - `npm run format:check`
+- `apps/web-react: npm run build`

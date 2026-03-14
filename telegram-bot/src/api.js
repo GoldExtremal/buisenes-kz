@@ -341,9 +341,11 @@ function createApiServer({ config, store, getSourceLabel, notifyManager, getMana
     fail(res, req?.reqId || "n/a", 500, "internal_error", "Internal error");
   });
 
-  app.listen(config.port, () => {
+  const server = app.listen(config.port, () => {
     logger.info("server.started", { port: config.port });
   });
+
+  return { app, server };
 }
 
 module.exports = { createApiServer };

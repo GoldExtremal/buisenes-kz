@@ -1,13 +1,15 @@
-const TelegramBot = require("node-telegram-bot-api");
 const { config } = require("./config");
 const { LEAD_STATUSES, SITE_CONTENT_DEFAULTS } = require("./constants");
 const { createStore } = require("./store");
 const { createApiServer } = require("./api");
 const { createTelegramHandlers } = require("./telegram");
 const { escapeHtml } = require("./utils");
+const { applyMigrations } = require("./migrations");
+const { createTelegramBotAdapter } = require("./telegram-adapter");
 
 async function bootstrap() {
-  const bot = new TelegramBot(config.token, { polling: true });
+  await applyMigrations({ dbFile: config.dbFile });
+  const bot = createTelegramBotAdapter(config.token);
 
   const store = createStore({
     dbFile: config.dbFile,
@@ -62,6 +64,7 @@ async function bootstrap() {
   });
 
   telegramHandlers.register();
+  await bot.launch();
 
   createApiServer({
     config,
