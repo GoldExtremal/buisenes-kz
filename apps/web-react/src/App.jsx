@@ -1,7 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
 import "./styles.css";
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:3001").replace(/\/$/, "");
+const TWO_GIS_REVIEWS_URL = "https://2gis.kz/astana/firm/70000001040136089/tab/reviews";
+const TWO_GIS_FIRM_URL = "https://2gis.kz/astana/firm/70000001040136089";
+const TWO_GIS_LOGO_URL = "https://2gis.kz/favicon.ico";
+const YANDEX_LOGO_URL = "https://yandex.ru/favicon.ico";
+const OFFICE_COORDS = [51.164985, 71.439996];
+const YANDEX_MAP_LINK = "https://yandex.ru/maps/?ll=71.439996%2C51.164985&z=16&pt=71.439996,51.164985,pm2rdm";
+const YANDEX_MAP_EMBED_URL =
+  "https://yandex.ru/map-widget/v1/?ll=71.439996%2C51.164985&z=16&pt=71.439996,51.164985,pm2rdm";
+const REVIEWS_LIMIT = 7;
 
 const SITE_CONTENT_DEFAULTS = {
   hero_title: "Запуск бизнеса и легализация в Казахстане без бюрократического стресса",
@@ -28,11 +37,16 @@ function App() {
   const [formData, setFormData] = useState({ name: "", phone: "", service: "" });
   const [formState, setFormState] = useState({ loading: false, note: "" });
   const [content, setContent] = useState(SITE_CONTENT_DEFAULTS);
+  const [reviewsState, setReviewsState] = useState({ loading: true, items: [], updatedAt: null });
+  const [expandedReviews, setExpandedReviews] = useState({});
+  const [overflowReviews, setOverflowReviews] = useState({});
+  const reviewsTrackRef = useRef(null);
+  const reviewTextRefs = useRef(new Map());
 
   const mergedContent = useMemo(() => ({ ...SITE_CONTENT_DEFAULTS, ...content }), [content]);
 
   useEffect(() => {
-    const revealItems = document.querySelectorAll(".reveal");
+    const revealItems = document.querySelectorAll(".reveal:not(.visible)");
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -50,7 +64,7 @@ function App() {
     return () => {
       observer.disconnect();
     };
-  }, []);
+  }, [reviewsState.loading, reviewsState.items.length]);
 
   useEffect(() => {
     async function loadPublicSiteContent() {
@@ -68,6 +82,70 @@ function App() {
 
     loadPublicSiteContent();
   }, []);
+
+  useEffect(() => {
+    async function load2gisReviews() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/public/reviews/2gis`);
+        if (!response.ok) {
+          setReviewsState({ loading: false, items: [], updatedAt: null });
+          return;
+        }
+        const data = await response.json();
+        setReviewsState({
+          loading: false,
+          items: Array.isArray(data?.reviews) ? data.reviews : [],
+          updatedAt: data?.updatedAt || null,
+        });
+      } catch (_err) {
+        setReviewsState({ loading: false, items: [], updatedAt: null });
+      }
+    }
+
+    load2gisReviews();
+  }, []);
+
+  const reviewsUpdatedAt = useMemo(() => {
+    if (!reviewsState.updatedAt) return "";
+    try {
+      return new Intl.DateTimeFormat("ru-RU", { dateStyle: "medium" }).format(
+        new Date(reviewsState.updatedAt)
+      );
+    } catch (_err) {
+      return "";
+    }
+  }, [reviewsState.updatedAt]);
+
+  const visibleReviews = useMemo(
+    () => (Array.isArray(reviewsState.items) ? reviewsState.items.slice(0, REVIEWS_LIMIT) : []),
+    [reviewsState.items]
+  );
+
+  useEffect(() => {
+    const next = {};
+    for (const review of visibleReviews) {
+      const el = reviewTextRefs.current.get(review.id);
+      if (!el) continue;
+      next[review.id] = el.scrollHeight > el.clientHeight + 1;
+    }
+    setOverflowReviews(next);
+  }, [visibleReviews]);
+
+  const setReviewTextRef = (id) => (node) => {
+    if (node) reviewTextRefs.current.set(id, node);
+    else reviewTextRefs.current.delete(id);
+  };
+
+  function toggleReview(id) {
+    setExpandedReviews((prev) => ({ ...prev, [id]: !prev[id] }));
+  }
+
+  function scrollReviews(direction) {
+    const track = reviewsTrackRef.current;
+    if (!track) return;
+    const offset = Math.max(260, Math.round(track.clientWidth * 0.8));
+    track.scrollBy({ left: direction * offset, behavior: "smooth" });
+  }
 
   async function onSubmit(event) {
     event.preventDefault();
@@ -386,12 +464,95 @@ function App() {
           </div>
         </section>
 
+        <section className="reviews" id="reviews">
+          <div className="container">
+            <div className="section-head reveal reviews-head">
+              <div>
+                <p className="eyebrow">Отзывы 2ГИС</p>
+                <h2>Что о нас говорят клиенты</h2>
+                {reviewsUpdatedAt ? <p className="reviews-meta">Обновлено: {reviewsUpdatedAt}</p> : null}
+              </div>
+              <div className="reviews-actions">
+                <button
+                  className="reviews-arrow"
+                  type="button"
+                  aria-label="Scroll reviews left"
+                  onClick={() => scrollReviews(-1)}
+                >
+                  {"<"}
+                </button>
+                <button
+                  className="reviews-arrow"
+                  type="button"
+                  aria-label="Scroll reviews right"
+                  onClick={() => scrollReviews(1)}
+                >
+                  {">"}
+                </button>
+                <a
+                  className="btn btn-ghost"
+                  href={TWO_GIS_REVIEWS_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Оставить отзыв в 2ГИС
+                </a>
+              </div>
+            </div>
+
+            {reviewsState.loading ? (
+              <p className="reviews-empty reveal">Загружаем отзывы...</p>
+            ) : visibleReviews.length > 0 ? (
+              <div className="reviews-grid" ref={reviewsTrackRef}>
+                {visibleReviews.map((review) => (
+                  <article className="review-card reveal" key={review.id}>
+                    <div className="review-head">
+                      <strong>{review.author}</strong>
+                      <span className="review-stars">
+                        {"★".repeat(Math.max(1, Math.min(5, Math.round(Number(review.rating) || 5))))}
+                        {"☆".repeat(5 - Math.max(1, Math.min(5, Math.round(Number(review.rating) || 5))))}
+                      </span>
+                    </div>
+                    {review.createdAt ? (
+                      <p className="review-date">
+                        {new Intl.DateTimeFormat("ru-RU", { day: "2-digit", month: "long", year: "numeric" }).format(
+                          new Date(review.createdAt)
+                        )}
+                      </p>
+                    ) : null}
+                    <p
+                      className={`review-text ${expandedReviews[review.id] ? "expanded" : ""}`}
+                      ref={setReviewTextRef(review.id)}
+                    >
+                      {review.text}
+                    </p>
+                    <div className="review-actions-row">
+                      {overflowReviews[review.id] ? (
+                        <button className="review-toggle" type="button" onClick={() => toggleReview(review.id)}>
+                          {expandedReviews[review.id] ? "Свернуть" : "Читать полностью"}
+                        </button>
+                      ) : null}
+                      <a href={review.sourceUrl || TWO_GIS_REVIEWS_URL} target="_blank" rel="noopener noreferrer">
+                        Смотреть в 2ГИС
+                      </a>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <p className="reviews-empty reveal">
+                Пока не удалось загрузить отзывы. Вы можете открыть их напрямую в 2ГИС.
+              </p>
+            )}
+          </div>
+        </section>
+
         <section className="map-block" id="map">
           <div className="container map-layout reveal">
             <div className="map-frame">
               <iframe
-                title="Карта офиса Business KZ"
-                src="https://www.openstreetmap.org/export/embed.html?bbox=71.4299%2C51.1599%2C71.4501%2C51.1701&layer=mapnik&marker=51.164985%2C71.439996"
+                title="Карта офиса Business KZ (Яндекс Карты)"
+                src={YANDEX_MAP_EMBED_URL}
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
               />
@@ -403,14 +564,27 @@ function App() {
               <p className="map-note">Координаты: 51.164985, 71.439996</p>
               <div className="map-actions">
                 <a
-                  className="btn"
-                  href="https://www.openstreetmap.org/?mlat=51.164985&mlon=71.439996#map=16/51.164985/71.439996"
+                  className="btn map-btn map-btn-2gis"
+                  href={TWO_GIS_FIRM_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Открыть карту
+                  <img className="map-btn-logo" src={TWO_GIS_LOGO_URL} alt="" aria-hidden="true" />
+                  Открыть в 2ГИС
                 </a>
-                <a className="btn btn-ghost" href="tel:+77023721518">
+                <a
+                  className="btn map-btn map-btn-yandex"
+                  href={YANDEX_MAP_LINK}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <img className="map-btn-logo" src={YANDEX_LOGO_URL} alt="" aria-hidden="true" />
+                  Открыть в Яндекс Картах
+                </a>
+                <a className="btn btn-ghost map-btn map-btn-call" href="tel:+77023721518">
+                  <span className="map-btn-icon map-btn-icon-phone" aria-hidden="true">
+                    ☎
+                  </span>
                   Позвонить
                 </a>
               </div>
@@ -461,3 +635,4 @@ function App() {
 }
 
 export default App;
+
