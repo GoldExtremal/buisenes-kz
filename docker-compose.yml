@@ -6,8 +6,14 @@ services:
     restart: unless-stopped
     env_file:
       - ./telegram-bot/.env
+    environment:
+      - DB_PATH=/data/bot.db
     ports:
       - "3001:3001"
     volumes:
-      - ./telegram-bot:/app
-      - /app/node_modules
+      - bot_data:/data
+      - bot_backups:/app/backups
+
+volumes:
+  bot_data:
+  bot_backups:

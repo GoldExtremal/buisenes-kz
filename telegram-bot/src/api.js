@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const { createLogger } = require("./logger");
@@ -34,12 +35,34 @@ function createApiServer({ config, store, getSourceLabel, notifyManager, getMana
   );
 
   app.use(express.json({ limit: "150kb" }));
+  app.use(cookieParser());
   app.use(
     cors({
-      origin: config.webAllowedOrigin === "*" ? true : config.webAllowedOrigin,
+      origin(origin, callback) {
+        if (!origin) return callback(null, true);
+        if (config.webAllowedOrigins.includes("*") || config.webAllowedOrigins.includes(origin)) {
+          return callback(null, true);
+        }
+        return callback(new Error("CORS origin is not allowed"));
+      },
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+      credentials: true,
     })
   );
+
+  const adminAuthLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: isProd ? 12 : 50,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+      ok: false,
+      error: {
+        code: "rate_limit",
+        message: "Too many auth attempts. Please try again later.",
+      },
+    },
+  });
 
   app.use(
     "/admin/api",
@@ -114,7 +137,9 @@ function createApiServer({ config, store, getSourceLabel, notifyManager, getMana
   function auth(required = true) {
     return async (req, res, next) => {
       const authHeader = req.headers.authorization || "";
-      const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+      const headerToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+      const cookieToken = String(req.cookies?.[config.authCookieName] || "").trim();
+      const token = headerToken || cookieToken;
       if (!token) {
         if (required) return fail(res, req.reqId, 401, "unauthorized", "Unauthorized");
         return next();
@@ -142,7 +167,7 @@ function createApiServer({ config, store, getSourceLabel, notifyManager, getMana
     };
   }
 
-  app.post("/admin/api/auth/login", async (req, res) => {
+  app.post("/admin/api/auth/login", adminAuthLimiter, async (req, res) => {
     const username = String(req.body?.username || "").trim();
     const password = String(req.body?.password || "").trim();
 
@@ -153,15 +178,23 @@ function createApiServer({ config, store, getSourceLabel, notifyManager, getMana
 
     const token = await store.createSession(user.id);
     await store.logAudit(user.id, "auth.login", { username });
+    res.cookie(config.authCookieName, token, {
+      httpOnly: true,
+      secure: config.authCookieSecure,
+      sameSite: "lax",
+      maxAge: config.sessionTtlHours * 60 * 60 * 1000,
+      path: "/",
+    });
     return ok(res, {
       token,
       user: { id: user.id, username: user.username, role: user.role },
     });
   });
 
-  app.post("/admin/api/auth/logout", auth(), async (req, res) => {
+  app.post("/admin/api/auth/logout", adminAuthLimiter, auth(), async (req, res) => {
     await store.deleteSession(req.auth.token);
     await store.logAudit(req.auth.user.id, "auth.logout", {});
+    res.clearCookie(config.authCookieName, { path: "/" });
     ok(res);
   });
 

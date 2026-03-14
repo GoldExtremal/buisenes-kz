@@ -1,5 +1,4 @@
 const API = "/admin/api";
-const TOKEN_KEY = "bkz_admin_token";
 const STATUSES = ["new", "in_progress", "waiting", "done"];
 const STATUS_LABELS = {
   new: "Новые",
@@ -34,7 +33,7 @@ const els = {
 };
 
 const state = {
-  token: localStorage.getItem(TOKEN_KEY) || "",
+  token: "",
   me: null,
   users: [],
   leads: [],
@@ -52,6 +51,7 @@ async function api(path, options = {}) {
       ...authHeaders(),
       ...(options.headers || {}),
     },
+    credentials: "same-origin",
     ...options,
   });
 
@@ -257,11 +257,6 @@ async function loadData() {
 }
 
 async function initAuth() {
-  if (!state.token) {
-    showLogin();
-    return;
-  }
-
   try {
     const meResp = await api("/me");
     state.me = meResp.user;
@@ -273,7 +268,6 @@ async function initAuth() {
     showApp();
     await loadData();
   } catch (_err) {
-    localStorage.removeItem(TOKEN_KEY);
     state.token = "";
     showLogin();
   }
@@ -292,8 +286,7 @@ els.loginForm.addEventListener("submit", async (event) => {
         password: els.loginPassword.value.trim(),
       }),
     });
-    state.token = resp.token;
-    localStorage.setItem(TOKEN_KEY, state.token);
+    state.token = resp.token || "";
     await initAuth();
   } catch (_err) {
     els.loginError.textContent = "Неверный логин или пароль.";
@@ -304,7 +297,6 @@ els.logoutBtn.addEventListener("click", async () => {
   try {
     await api("/auth/logout", { method: "POST" });
   } catch (_) {}
-  localStorage.removeItem(TOKEN_KEY);
   state.token = "";
   location.reload();
 });

@@ -72,6 +72,8 @@ npm run db:backup
 - `ADMIN_USERNAME` - логин супер-админа
 - `ADMIN_PASSWORD` - пароль супер-админа
 - `SESSION_TTL_HOURS` - TTL сессии
+- `AUTH_COOKIE_NAME` - имя httpOnly cookie админ-сессии
+- `AUTH_COOKIE_SECURE` - secure-флаг cookie (`true` для HTTPS)
 
 ## Безопасность
 
@@ -79,6 +81,7 @@ npm run db:backup
 - rate limit на публичный и admin API
 - role-based доступ (`manager`, `superadmin`)
 - единый формат ошибок API
+- admin auth поддерживает httpOnly cookie сессии
 
 ## Docker
 
