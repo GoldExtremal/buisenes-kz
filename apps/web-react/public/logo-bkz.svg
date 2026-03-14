@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" role="img" aria-labelledby="logoTitle logoDesc">
+  <title id="logoTitle">Центр бизнес и миграционных решений</title>
+  <desc id="logoDesc">Логотип с контурными зданиями и названием компании</desc>
+  <rect width="500" height="500" fill="#1d2a67" />
+  <g stroke="#d6ab56" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round" transform="translate(170 110)">
+    <path d="M72 128V4l46 27v97" />
+    <path d="M108 128V66l36-20v82" />
+    <path d="M39 128V46l33 20v62" />
+    <path d="M0 128V72l39 23v33" />
+  </g>
+  <g fill="#d6ab56" font-family="Unbounded, PT Sans, Arial, sans-serif" font-size="34" letter-spacing="6">
+    <text x="96" y="315">ЦЕНТР БИЗНЕС И</text>
+    <text x="96" y="365">МИГРАЦИОННЫХ</text>
+    <text x="160" y="415">РЕШЕНИЙ</text>
+  </g>
+</svg>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Business KZ favicon">
+  <rect width="64" height="64" rx="12" fill="#1d2a67" />
+  <g stroke="#d6ab56" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round" transform="translate(14 10)">
+    <path d="M14 38V3l12 7v28" />
+    <path d="M24 38V20l9-5v23" />
+    <path d="M6 38V15l8 5v18" />
+    <path d="M0 38V22l6 4v12" />
+  </g>
+</svg>
